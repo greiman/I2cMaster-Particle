@@ -1,0 +1,7 @@
+{
+  "name": "I2cMaster",
+  "author": "William Greiman <fat16lib@sbcglobal.net>",
+  "license": "GPL v3",
+  "version": "0.0.1",
+  "description": "An I2C Master library for Particle."
+}
