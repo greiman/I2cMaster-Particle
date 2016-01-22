@@ -22,7 +22,10 @@
 #include "application.h"
 #include "i2c_lld.h"
 #include "WireMaster.h"
-
+/**
+ * @class I2cMaster
+ * @brief I2C polled master class.
+ */
 class I2cMaster {
  public:
   /** Create an I2cMaster object for a specified I2C interface.
@@ -82,18 +85,21 @@ class I2cMaster {
    * @param[in] data data to write out on bus
    *
    * @returns true for success else false.
+   * @param[in] stop Generate stop if true.   
    */
   bool write(uint8_t data, bool stop);
-  /** Write to an I2C slave
+  
+  /** Write to a selected slave.
    *
-   * @param[in] address Right justified 7-bit address.
+   * Continue after a write without a stop.
+   *
    * @param[in] buf Data to send.
    * @param[in] count Number of bytes to send.
    * @param[in] stop Generate stop if true.
    *
    * @returns true for success else false.
    */  
-  bool write(const void* data, size_t count, bool stop);
+  bool write(const void* buf, size_t count, bool stop);
   
   /** Write to an I2C slave
    *

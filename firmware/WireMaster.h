@@ -29,31 +29,156 @@
 
 // WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
-
+/**
+ * @class WireMaster
+ * @brief Arduino Wire style class.
+ */
 class WireMaster : public Stream {
  public:
+  /** Create an I2cMaster object for a specified I2C interface.
+   *
+   * @param[in] i2cIf I2C interface.
+   */
   explicit WireMaster(HAL_I2C_Interface i2cIf = HAL_I2C_INTERFACE1);
+  
+  /**
+   * @return Returns the number of bytes available for retrieval with read().
+   */   
+  virtual int available();
+  
+  /** Initialize the I2C interface.
+   *
+   */  
   void begin();
-  void beginTransmission(uint8_t);
-  void beginTransmission(int);
-  void end();  
-  size_t endTransmission(void);
-  size_t endTransmission(uint8_t);
-  size_t requestFrom(uint8_t, size_t);
-  size_t requestFrom(uint8_t, size_t, uint8_t);
-  void setClock(uint32_t);
+  /** Begin a transmission to the I2C slave device with the given address.
+   *
+   * @param[in] address Right justified 7-bit address.
+   */
+  void beginTransmission(uint8_t address);
   
-  virtual int available(void);
-  virtual void flush(void);  
-  virtual int peek(void);
-  virtual int read(void);
-  virtual size_t write(uint8_t);
-  virtual size_t write(const uint8_t*, size_t);
+  /** Begin a transmission to the I2C slave device with the given address.
+   *
+   * @param[in] address Right justified 7-bit address.
+   */  
+  void beginTransmission(int address);
   
-  inline size_t write(unsigned long n) { return write((uint8_t)n); }
-  inline size_t write(long n) { return write((uint8_t)n); }
-  inline size_t write(unsigned int n) { return write((uint8_t)n); }
-  inline size_t write(int n) { return write((uint8_t)n); }  
+  /** Disable the I2C interface. */  
+  void end();
+  
+  /** Ends a transmission to a slave device that was begun by beginTransmission().
+   * Transmits the bytes that were queued by write(). 
+   *
+   * @return zero for success else error code.
+   */
+  uint8_t endTransmission();
+  
+  /** Ends a transmission to a slave device that was begun by beginTransmission().
+   * Transmits the bytes that were queued by write(). 
+   *
+   * @param[in] stop Generate stop if true.
+   *
+   * @return zero for success else error code.
+   */  
+  uint8_t endTransmission(uint8_t stop);
+ 
+  /** Not implemented */
+  virtual void flush();  
+  
+  /** Returns the next byte without removing it from the serial buffer.
+   *
+   * @return -1 if no data is available else the byte.   
+   */
+  virtual int peek();
+  
+  /** Reads a byte that was transmitted from a slave device
+   *
+   * @return Returns -1 if no data is available else the byte.
+   */
+  virtual int read();
+   
+  /** Request bytes from a slave device.
+   *
+   * @param[in] address Right justified 7-bit address.
+   * @param[in] quantity Number of bytes to read.
+   *
+   * @returns The number of bytes returned from the slave device.
+   */
+  size_t requestFrom(uint8_t address, size_t quantity);
+  
+  /** Request bytes from a slave device.
+   *
+   * @param[in] address Right justified 7-bit address.
+   * @param[in] quantity Number of bytes to read.
+   * @param[in] stop Generate stop if true.
+   *
+   * @returns The number of bytes returned from the slave device.
+   */
+  size_t requestFrom(uint8_t address, size_t quantity, uint8_t stop);
+  
+  /** Set scl frequency.
+   *
+   * Call after begin().
+   *
+   * @param[in] hz The bus frequency in Hz.
+   */  
+  void setClock(uint32_t hz);
+  
+  /** Set scl frequency.
+   *
+   * Call after begin().
+   *
+   * @param[in] hz The bus frequency in Hz.
+   */  
+  void setSpeed(uint32_t hz) {setClock(hz);}
+  
+  /** Queues a byte for transmission from a master to slave device.
+   *
+   * @param[in] data The byte to be queued.
+   *
+   * @return One if the byte is queued else zero.
+   */
+  virtual size_t write(uint8_t data);
+  
+  /** Queues bytes for transmission from a master to slave device.
+   *
+   * @param[in] buf Location of data to be queued.
+   * @param[in] quantity Number of bytes to queue.
+   *
+   * @return Number of bytes queued.
+   */  
+  virtual size_t write(const uint8_t* buf, size_t quantity);
+
+  /** Queues a byte for transmission from a master to slave device.
+   *
+   * @param[in] data The byte to be queued.
+   *
+   * @return One if the byte is queued else zero.
+   */  
+  inline size_t write(unsigned long data) {return write((uint8_t)data);}
+  
+  /** Queues a byte for transmission from a master to slave device.
+   *
+   * @param[in] data The byte to be queued.
+   *
+   * @return One if the byte is queued else zero.
+   */  
+  inline size_t write(long data) {return write((uint8_t)data);}
+  
+  /** Queues a byte for transmission from a master to slave device.
+   *
+   * @param[in] data The byte to be queued.
+   *
+   * @return One if the byte is queued else zero.
+   */  
+  inline size_t write(unsigned int data) {return write((uint8_t)data);}
+  
+  /** Queues a byte for transmission from a master to slave device.
+   *
+   * @param[in] data The byte to be queued.
+   *
+   * @return One if the byte is queued else zero.
+   */  
+  inline size_t write(int data) {return write((uint8_t)data);}  
   
   using Print::write;
   
@@ -65,7 +190,6 @@ class WireMaster : public Stream {
   uint8_t m_txAddress;
   uint8_t m_txBuffer[WIRE_MASTER_BUFFER_LENGTH];
   size_t m_txBufferLength;
-
   uint8_t m_transmitting;  
 };
 

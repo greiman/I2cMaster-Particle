@@ -9,6 +9,7 @@ I2cMaster I2C;
 WireMaster WireAlt;
 #define Wire WireAlt
 
+//-----------------------------------------------------------------------------
 // Print fail message with return info.
 void failMsg(const char* msg) {
   Serial.print(msg);
@@ -16,12 +17,17 @@ void failMsg(const char* msg) {
   Serial.println(I2C.rtn());
 }
 //-----------------------------------------------------------------------------
-void printData(uint8_t* data, uint8_t count) {
-  for (int r = 0; r < count; r += 8) {
-    if (r < 16) Serial.print('0');
+void printData(uint8_t* data, size_t count) {
+  for (size_t r = 0; r < count; r += 8) {
+    if (count > 256 && r < 256) {
+      Serial.print('0');
+    }
+    if (r < 16) {
+      Serial.print('0');
+    }
     Serial.print(r, HEX);
     Serial.print("  ");
-    for (int i = 0; i < 8 && (i+r) < count; i++) {
+    for (size_t i = 0; i < 8 && (i+r) < count; i++) {
       Serial.print(' ');
       if (data[i+r] < 16) {
         Serial.print('0');
@@ -39,9 +45,9 @@ bool rtcRead(uint8_t memAdd, uint8_t* buf, size_t count) {
 //------------------------------------------------------------------------------
 bool rtcReadWire(uint8_t memAdd, uint8_t* buf, size_t count) {
   Wire.beginTransmission(DS1307_I2C_ADDRESS);
-  Wire.write(memAdd);
-  Wire.endTransmission();
-  if (Wire.requestFrom(DS1307_I2C_ADDRESS, count) != count) {
+  if (Wire.write(memAdd) != 1 ||
+    Wire.endTransmission() != 0 ||
+    Wire.requestFrom(DS1307_I2C_ADDRESS, count) != count) {
     return false;
   }
   for (size_t i = 0; i < count; i++) {
@@ -88,7 +94,6 @@ void dumpAll() {
 void setRam() {
   uint8_t memAdd = 8;
   if (!I2C.begin()) {
-    Serial.println(I2C.rtn());    
     failMsg("I2C.begin failed");
     return;
   }
@@ -101,6 +106,7 @@ void setRam() {
     }
   }
   I2C.stop();
+  I2C.end();
   Serial.println("Done");  
 }
 //-----------------------------------------------------------------------------
@@ -133,8 +139,8 @@ void scanBus() {
   I2C.end();  
 }
 //-----------------------------------------------------------------------------
-void testWire(uint8_t n) {
-  uint8_t reg[64];
+void testWire(size_t n) {
+  uint8_t reg[n];
 
   Wire.begin();
 
@@ -161,7 +167,9 @@ void loop() {
   do {delay(10);} while (Serial.read() >= 0);
   Serial.println("Type '1' scan bus, '2' dump all, '3' setRam");
   Serial.println("     '4' clearRam, '5' testWire");
-  while ((c = Serial.read()) < 0);
+  while ((c = Serial.read()) < 0) {
+    delay(10);
+  }
   switch (c) {
     case '1':
       scanBus();

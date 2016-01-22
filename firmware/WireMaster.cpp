@@ -17,9 +17,7 @@
  * along with the Particle I2cMaster Library.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-/*
-  Arduino Wire Master functionality.
-*/
+/* Arduino Wire Master functionality. */
 #include "WireMaster.h"
 #include "i2c_lld.h"
 
@@ -57,21 +55,20 @@ void WireMaster::end() {
   i2c_end(m_i2cIf);
 }
 
-size_t WireMaster::endTransmission(uint8_t sendStop) {
+uint8_t WireMaster::endTransmission(uint8_t stop) {
   CRITICAL_SECTION_BLOCK();
+  uint8_t rtn = 1;
+  int n;
   if (m_transmitting) {
-    int ret = i2c_write(m_i2cIf, m_txAddress, m_txBuffer, m_txBufferLength, sendStop);
-    if (ret < 0) {
-      ret = 0;
-    }
-    m_txBufferLength = 0;
-    m_transmitting = 0;
-    return ret;
+    n = i2c_write(m_i2cIf, m_txAddress, m_txBuffer, m_txBufferLength, stop);
+    rtn = n < 0 ? 2 : 0;
   }
-  return 0;
+  m_txBufferLength = 0;
+  m_transmitting = 0;  
+  return rtn;
 }
 
-size_t WireMaster::endTransmission() {
+uint8_t WireMaster::endTransmission() {
   return endTransmission(true);
 }
 
@@ -121,7 +118,8 @@ size_t WireMaster::write(uint8_t data) {
     m_txBuffer[m_txBufferLength++] = data;    
     return 1;
   }
-  setWriteError();
+  // Error so don't send data.
+  m_transmitting = 0;
   return 0;
 }
 
