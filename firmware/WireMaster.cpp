@@ -21,6 +21,11 @@
 #include "WireMaster.h"
 #include "i2c_lld.h"
 
+// SINGLE_THREADED_SECTION was called CRITICAL_SECTION_BLOCK.
+#ifndef SINGLE_THREADED_SECTION
+#define SINGLE_THREADED_SECTION() CRITICAL_SECTION_BLOCK()
+#endif  // SINGLE_THREADED_SECTION
+
 WireMaster::WireMaster(HAL_I2C_Interface i2cIf) {
   m_i2cIf = i2cIf;
   m_rxBufferIndex = 0;
@@ -56,7 +61,7 @@ void WireMaster::end() {
 }
 
 uint8_t WireMaster::endTransmission(uint8_t stop) {
-  CRITICAL_SECTION_BLOCK();
+  SINGLE_THREADED_SECTION();
   uint8_t rtn = 1;
   int n;
   if (m_transmitting) {
@@ -91,7 +96,7 @@ int WireMaster::read() {
 }
 
 size_t WireMaster::requestFrom(uint8_t address, size_t quantity, uint8_t sendStop) {
-  CRITICAL_SECTION_BLOCK();
+  SINGLE_THREADED_SECTION();
   // Follow Arduino if quanity too large.
   if (quantity > WIRE_MASTER_BUFFER_LENGTH) {
     quantity = WIRE_MASTER_BUFFER_LENGTH;
