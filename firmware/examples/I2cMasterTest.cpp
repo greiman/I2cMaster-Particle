@@ -7,6 +7,7 @@ I2cMaster I2C;
 
 // Must use macro to avoid predefined Wire object.
 WireMaster WireAlt;
+#undef Wire
 #define Wire WireAlt
 
 //-----------------------------------------------------------------------------

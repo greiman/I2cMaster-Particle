@@ -115,9 +115,15 @@ class WireMaster : public Stream {
    */
   size_t requestFrom(uint8_t address, size_t quantity, uint8_t stop);
   
+  /** Return low level driver info.
+   *
+   * @returns See low level driver.
+   */
+  int rtn() {return m_rtn;}
+  
   /** Set scl frequency.
    *
-   * Call after begin().
+   * @note May be called before or after after begin().
    *
    * @param[in] hz The bus frequency in Hz.
    */  
@@ -125,7 +131,7 @@ class WireMaster : public Stream {
   
   /** Set scl frequency.
    *
-   * Call after begin().
+   * @note May be called before or after after begin().
    *
    * @param[in] hz The bus frequency in Hz.
    */  
@@ -183,7 +189,9 @@ class WireMaster : public Stream {
   using Print::write;
   
  private:
+  uint32_t m_frequency;
   HAL_I2C_Interface m_i2cIf;
+  int m_rtn;
   uint8_t m_rxBuffer[WIRE_MASTER_BUFFER_LENGTH];
   size_t m_rxBufferIndex;
   size_t m_rxBufferLength;

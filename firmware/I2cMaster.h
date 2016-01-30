@@ -41,7 +41,7 @@ class I2cMaster {
    *
    * @returns true for success else false.
    */
-  bool begin(uint32_t hz = 1000000);
+  bool begin(uint32_t hz = 100000);
 
   /** Disable the I2C interface.
    *

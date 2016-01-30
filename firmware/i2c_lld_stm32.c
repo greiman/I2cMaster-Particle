@@ -28,7 +28,6 @@
    not remain stuck if the I2C communication is corrupted. */
 #define FLAG_TIMEOUT ((int)0x1000)
 #define LONG_TIMEOUT ((int)0x8000)
-
 //-----------------------------------------------------------------------------
 typedef struct STM32_I2C_Info {
   I2C_TypeDef*   i2c;
@@ -72,8 +71,12 @@ static void clearAddrFlag(I2C_TypeDef* i2c) {
   (void)tmpreg;
 }
 
-static bool i2cBusy(I2C_TypeDef* i2c) {
-  return i2c->SR2 & I2C_SR2_BUSY;
+static int waitForStopCondition(I2C_TypeDef* i2c) {
+  int timeout = FLAG_TIMEOUT;
+  while (i2c->CR1 & I2C_CR1_STOP) {
+    if (--timeout <= 0) return 0;
+  }
+  return 1;
 }
 
 static int waitUntilBitSetSR1(I2C_TypeDef* i2c, uint32_t bit) {
@@ -83,8 +86,16 @@ static int waitUntilBitSetSR1(I2C_TypeDef* i2c, uint32_t bit) {
   } while (timeout--);
   return 0;
 }
+
+static int waitUntilNotBusy(I2C_TypeDef* i2c) {
+   int timeout = LONG_TIMEOUT;
+  while (i2c->SR2 & I2C_SR2_BUSY) {
+    if (--timeout <= 0) return 0;
+  }
+  return 1; 
+}
 //-----------------------------------------------------------------------------
-int i2c_begin(HAL_I2C_Interface i2cIf, uint32_t I2C_ClockSpeed) {
+int i2c_begin(HAL_I2C_Interface i2cIf, uint32_t hz) {
   if (i2cIf >= N_I2C_IF) {
     return I2C_ERROR_ARG;
   }
@@ -110,7 +121,7 @@ int i2c_begin(HAL_I2C_Interface i2cIf, uint32_t I2C_ClockSpeed) {
   HAL_Pin_Mode(p->sclPin, AF_OUTPUT_DRAIN);
   HAL_Pin_Mode(p->sdaPin, AF_OUTPUT_DRAIN);
 
-   return i2c_frequency(i2cIf, 100000);
+   return i2c_frequency(i2cIf, hz);
 }
 //-----------------------------------------------------------------------------
 int i2c_end(HAL_I2C_Interface i2cIf) {
@@ -118,10 +129,8 @@ int i2c_end(HAL_I2C_Interface i2cIf) {
     return I2C_ERROR_ARG;
   }
   STM32_I2C_Info* p = &I2C_MAP[i2cIf];
-  int timeout;
-  
-  timeout = LONG_TIMEOUT;
-  while (i2cBusy(p->i2c) && (timeout-- != 0));
+
+  waitUntilNotBusy(p->i2c);
 
   I2C_Cmd(p->i2c, DISABLE);
 
@@ -133,14 +142,12 @@ int i2c_frequency(HAL_I2C_Interface i2cIf, uint32_t hz) {
     return I2C_ERROR_ARG;
   }
   STM32_I2C_Info* p = &I2C_MAP[i2cIf];
-  int timeout;
 
   if (hz > 400000) {
     return I2C_ERROR_ARG;
   }
   // wait before init
-  timeout = LONG_TIMEOUT;
-  while (i2cBusy(p->i2c) && (timeout-- != 0));
+  waitUntilNotBusy(p->i2c);
 
   // I2C configuration
   I2C_InitTypeDef I2C_InitStructure;
@@ -168,6 +175,7 @@ int i2c_read(HAL_I2C_Interface i2cIf,
   /* Disable Pos */
   pI2c->CR1 &= ~I2C_CR1_POS;
 
+
   /* Enable Acknowledge */
   pI2c->CR1 |= I2C_CR1_ACK;
 
@@ -176,6 +184,7 @@ int i2c_read(HAL_I2C_Interface i2cIf,
 
   /* Wait until SB flag is set */
   if (!waitUntilBitSetSR1(pI2c, I2C_SR1_SB)) {
+   
     return I2C_ERROR_TIMEOUT;
   }
 
@@ -183,9 +192,10 @@ int i2c_read(HAL_I2C_Interface i2cIf,
    pI2c->DR = (address << 1) | 1;
 
   /* Wait until ADDR flag is set */
-  if (!waitUntilBitSetSR1(pI2c, I2C_SR1_ADDR)) {
+  if (!waitUntilBitSetSR1(pI2c, I2C_SR1_ADDR)) {    
       return I2C_ERROR_TIMEOUT;
   }
+  
   if (count == 1) {
     /* Disable Acknowledge */
     pI2c->CR1 &= ~I2C_CR1_ACK;
@@ -274,7 +284,9 @@ int i2c_read(HAL_I2C_Interface i2cIf,
     /* Read data from DR */
     *pData++ = pI2c->DR;  
   }
-
+  if (stop && !waitForStopCondition(pI2c)) {
+    return I2C_ERROR_TIMEOUT;
+  }
   return count;
 }
 //-----------------------------------------------------------------------------
@@ -282,7 +294,13 @@ int i2c_stop(HAL_I2C_Interface i2cIf) {
   if (i2cIf >= N_I2C_IF) {
     return I2C_ERROR_ARG;
   }
-  I2C_MAP[i2cIf].i2c->CR1 |= I2C_CR1_STOP;;
+  I2C_TypeDef* pI2c = I2C_MAP[i2cIf].i2c;
+  
+  pI2c->CR1 |= I2C_CR1_STOP;
+  
+  if (!waitForStopCondition(pI2c)) {
+    return I2C_ERROR_TIMEOUT;
+  }
   return 0;
 }
 //-----------------------------------------------------------------------------
@@ -295,20 +313,22 @@ int i2c_write(HAL_I2C_Interface i2cIf, uint8_t address,
 
   /* Disable POS */
   pI2c->CR1 &= ~I2C_CR1_POS;
-
+  
   /* Generate Start */
   pI2c->CR1 |= I2C_CR1_START;
 
   /* Wait until SB flag is set */
   if (!waitUntilBitSetSR1(pI2c, I2C_SR1_SB)){
+  
     return I2C_ERROR_TIMEOUT;
   }
-  
+
   /* Send slave address */
    pI2c->DR = address << 1;
 
   /* Wait until ADDR flag is set */
   if (!waitUntilBitSetSR1(pI2c, I2C_SR1_ADDR)) {
+   
     return I2C_ERROR_TIMEOUT;
   }
 
@@ -359,6 +379,10 @@ int i2c_write_data(HAL_I2C_Interface i2cIf, const void* buf, size_t count, int s
   /* Generate Stop */
   if (stop) {
     pI2c->CR1 |= I2C_CR1_STOP;
+    
+    if (!waitForStopCondition(pI2c)) {
+      return I2C_ERROR_TIMEOUT;
+    }
   }
 
   return count;

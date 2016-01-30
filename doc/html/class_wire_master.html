@@ -131,6 +131,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ad48ed8d1d3845f945f5c0db33fe801bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:affaaf988c9888791af3ee9616493b1bd"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_wire_master.html#affaaf988c9888791af3ee9616493b1bd">requestFrom</a> (uint8_t address, size_t quantity, uint8_t stop)</td></tr>
 <tr class="separator:affaaf988c9888791af3ee9616493b1bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1deca403575a9482653eb622a35bfcfd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_wire_master.html#a1deca403575a9482653eb622a35bfcfd">rtn</a> ()</td></tr>
+<tr class="separator:a1deca403575a9482653eb622a35bfcfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd60235f8fc58c2c69ab25cf090a0379"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_wire_master.html#afd60235f8fc58c2c69ab25cf090a0379">setClock</a> (uint32_t hz)</td></tr>
 <tr class="separator:afd60235f8fc58c2c69ab25cf090a0379"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a079036eb5dfaf6238f5bc4a387e66c0c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_wire_master.html#a079036eb5dfaf6238f5bc4a387e66c0c">setSpeed</a> (uint32_t hz)</td></tr>
@@ -477,6 +479,31 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a1deca403575a9482653eb622a35bfcfd"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int WireMaster::rtn </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return low level driver info.</p>
+<dl class="section return"><dt>Returns</dt><dd>See low level driver. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="afd60235f8fc58c2c69ab25cf090a0379"></a>
 <div class="memitem">
 <div class="memproto">
@@ -491,7 +518,7 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>Set scl frequency.</p>
-<p>Call after <a class="el" href="class_wire_master.html#a62165beaa0c0bd1c741e03184eead52d">begin()</a>.</p>
+<dl class="section note"><dt>Note</dt><dd>May be called before or after after <a class="el" href="class_wire_master.html#a62165beaa0c0bd1c741e03184eead52d">begin()</a>.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">hz</td><td>The bus frequency in Hz. </td></tr>
@@ -523,7 +550,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 <p>Set scl frequency.</p>
-<p>Call after <a class="el" href="class_wire_master.html#a62165beaa0c0bd1c741e03184eead52d">begin()</a>.</p>
+<dl class="section note"><dt>Note</dt><dd>May be called before or after after <a class="el" href="class_wire_master.html#a62165beaa0c0bd1c741e03184eead52d">begin()</a>.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">hz</td><td>The bus frequency in Hz. </td></tr>
@@ -737,8 +764,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>D:/photon/firmware-0.4.7/firmware-0.4.7/user/applications/I2cMasterTest/I2cMaster/<a class="el" href="_wire_master_8h_source.html">WireMaster.h</a></li>
-<li>D:/photon/firmware-0.4.7/firmware-0.4.7/user/applications/I2cMasterTest/I2cMaster/WireMaster.cpp</li>
+<li>D:/photon/firmware-0.4.9-rc.3/user/applications/mcp23017/Adafruit_MCP23017/I2cMaster/<a class="el" href="_wire_master_8h_source.html">WireMaster.h</a></li>
+<li>D:/photon/firmware-0.4.9-rc.3/user/applications/mcp23017/Adafruit_MCP23017/I2cMaster/WireMaster.cpp</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

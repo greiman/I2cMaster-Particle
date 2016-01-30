@@ -21,12 +21,8 @@
 #include "WireMaster.h"
 #include "i2c_lld.h"
 
-// SINGLE_THREADED_SECTION was called CRITICAL_SECTION_BLOCK.
-#ifndef SINGLE_THREADED_SECTION
-#define SINGLE_THREADED_SECTION() CRITICAL_SECTION_BLOCK()
-#endif  // SINGLE_THREADED_SECTION
-
 WireMaster::WireMaster(HAL_I2C_Interface i2cIf) {
+  m_frequency = 100000;
   m_i2cIf = i2cIf;
   m_rxBufferIndex = 0;
   m_rxBufferLength = 0;
@@ -43,7 +39,7 @@ void WireMaster::begin() {
   m_rxBufferLength = 0;
   m_txBufferLength = 0;
   m_transmitting = 0;
-  i2c_begin(m_i2cIf, 100000);
+  i2c_begin(m_i2cIf, m_frequency);
 }
 
 void WireMaster::beginTransmission(uint8_t address) {
@@ -61,12 +57,10 @@ void WireMaster::end() {
 }
 
 uint8_t WireMaster::endTransmission(uint8_t stop) {
-  SINGLE_THREADED_SECTION();
   uint8_t rtn = 1;
-  int n;
   if (m_transmitting) {
-    n = i2c_write(m_i2cIf, m_txAddress, m_txBuffer, m_txBufferLength, stop);
-    rtn = n < 0 ? 2 : 0;
+    m_rtn = i2c_write(m_i2cIf, m_txAddress, m_txBuffer, m_txBufferLength, stop);
+    rtn = m_rtn < 0 ? 2 : 0;
   }
   m_txBufferLength = 0;
   m_transmitting = 0;  
@@ -96,26 +90,22 @@ int WireMaster::read() {
 }
 
 size_t WireMaster::requestFrom(uint8_t address, size_t quantity, uint8_t sendStop) {
-  SINGLE_THREADED_SECTION();
-  // Follow Arduino if quanity too large.
+  // Follow Arduino if quantity too large.
   if (quantity > WIRE_MASTER_BUFFER_LENGTH) {
     quantity = WIRE_MASTER_BUFFER_LENGTH;
   }
-  int rtn = i2c_read(m_i2cIf, address, m_rxBuffer, quantity, sendStop);
-  if (rtn < 0) {
-    rtn = 0;
-  }
+  m_rtn = i2c_read(m_i2cIf, address, m_rxBuffer, quantity, sendStop);
   m_rxBufferIndex = 0;
-  m_rxBufferLength = rtn;
-
-  return rtn;
+  m_rxBufferLength = m_rtn < 0 ? 0 : quantity;
+  return m_rxBufferLength;
 }
 size_t WireMaster::requestFrom(uint8_t address, size_t quantity) {
   return requestFrom(address, quantity, 1);
 }
   
 void WireMaster::setClock(uint32_t frequency) {
-  i2c_frequency(m_i2cIf, frequency);
+  m_frequency = frequency;
+  i2c_frequency(m_i2cIf, m_frequency);
 }
 
 size_t WireMaster::write(uint8_t data) {

@@ -20,11 +20,6 @@
 #include "application.h"
 #include "I2cMaster.h"
 
-// SINGLE_THREADED_SECTION was called CRITICAL_SECTION_BLOCK.
-#ifndef SINGLE_THREADED_SECTION
-#define SINGLE_THREADED_SECTION() CRITICAL_SECTION_BLOCK()
-#endif  // SINGLE_THREADED_SECTION
-
 bool I2cMaster::begin(uint32_t hz) {
   m_rtn = i2c_begin(m_i2cIf, hz);
   return m_rtn >= 0;
@@ -41,7 +36,6 @@ bool I2cMaster::frequency(uint32_t hz) {
 }
 
 bool I2cMaster::read(uint8_t address, void* buf, size_t count, bool stop) {
-  SINGLE_THREADED_SECTION();
   m_rtn = i2c_read(m_i2cIf, address, buf, count, stop);
   return m_rtn >= 0;
 }
@@ -52,19 +46,16 @@ bool I2cMaster::stop() {
 }
 
 bool I2cMaster::write(uint8_t data, bool stop) {
-  SINGLE_THREADED_SECTION();
   m_rtn =  i2c_write_data(m_i2cIf, &data, 1, stop);
   return m_rtn >= 0;
 }
 
 bool I2cMaster::write(const void* buf, size_t count, bool stop) {
-  SINGLE_THREADED_SECTION();
   m_rtn =  i2c_write_data(m_i2cIf, buf, count, stop);
   return m_rtn >= 0;
 }
 
 bool I2cMaster::write(uint8_t address, const void* buf, size_t count, bool stop) {
-  SINGLE_THREADED_SECTION();
   m_rtn = i2c_write(m_i2cIf, address, buf, count, stop);
   return m_rtn >= 0;
 }
